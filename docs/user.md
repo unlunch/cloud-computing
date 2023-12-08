@@ -96,7 +96,20 @@ Response Body Password Error :
 }
 ```
 
+Response Body if JWT token Already :
+
+```json
+{
+    "data": {
+        "statusLogin": true
+    },
+    "message": "You are logged."
+}
+```
+
 ## Forgot User API
+
+<!-- lagi dipikirkan  -->
 
 Endpoint : POST /api/user/forgot-password
 
@@ -104,11 +117,12 @@ Request Body :
 
 ```json
 {
-    "email": "rahasia@gmail.com"
+    "email": "rahasia@gmail.com",
+    "redirect_url": "myandroidapp://path/to/formupdatepassword"
 }
 ```
 
-Request Body Success :
+Response Body Success :
 
 ```json
 {
@@ -121,7 +135,7 @@ Request Body Success :
 }
 ```
 
-Request Body Error :
+Response Body Error :
 
 ```json
 {
@@ -130,6 +144,8 @@ Request Body Error :
 ```
 
 ## Forgot User Verify API
+
+<!-- lagi dipikirkan  -->
 
 Endpoint : GET /api/user/forgot-password/verify/:id/:token
 
@@ -146,5 +162,82 @@ Response Body Error :
 ```json
 {
     "errors": "Invalid verification token."
+}
+```
+
+## Current User API
+
+Endpoint : GET /api/user/current-login
+
+Response Success :
+
+```json
+{
+    "Message": {
+        "id": "uuid",
+        "name": "john smith",
+        "email": "example@gmail.com ",
+        "token": "unique-token"
+    }
+}
+```
+
+Response Error :
+
+```json
+{
+    "errors": "Invalid or expired verification token, Please Login."
+}
+```
+
+## Update Password User API
+
+Endpoint : POST /api/user/forgot-password
+
+Request Body :
+
+```json
+{
+    "password": "rahasia"
+}
+```
+
+Response Body Success :
+
+```json
+{
+    "message": "Password has been changed."
+}
+```
+
+Response Body Error :
+
+```json
+{
+    "errors": "Password cannot be changed."
+}
+```
+
+## Logout USER API
+
+Endpoint : POST /api/user/logout/:token
+
+Headers :
+
+-   Authorization : token
+
+Response Body Success :
+
+```json
+{
+    "message": "you have logged out"
+}
+```
+
+Response Body if Token not ready :
+
+```json
+{
+    "errors": "User not found."
 }
 ```
