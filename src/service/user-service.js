@@ -1,5 +1,5 @@
 import { prismaClient } from "../application/database.js";
-import { forgotUserValidation, loginUserValidation, registerUserValidation, updatePasswordValidation } from "../validation/user-validation.js";
+import { forgotUserValidation, loginUserValidation, registerUserValidation } from "../validation/user-validation.js";
 import { validate } from "../validation/validation.js";
 import { ResponseError } from "../error/response-error.js";
 import bcrypt from "bcrypt";
@@ -9,6 +9,7 @@ import jwt from "jsonwebtoken";
 const jwtSecretKey = process.env.SECRET_KEY || 'secret';
 const PORT = process.env.PORT || 3000;
 const APP_URL = process.env.APP_URL || 'localhost';
+const FORGOT_PAGE_URL = process.env.FORGOT_PAGE_URL;
 
 const transporter = nodemailer.createTransport({
     host: process.env.MAIL_HOST,
@@ -110,7 +111,8 @@ const login = async (request, response) => {
         select: {
             email_verified_at: true,
             email: true,
-            password: true
+            password: true,
+            token: true
         }
     });
 
@@ -125,11 +127,31 @@ const login = async (request, response) => {
 
     const verified = user.email_verified_at;
     if (verified) {
-        const verificationToken = jwt.sign({ email: user.email }, jwtSecretKey, { expiresIn: '6h' });
+        let statusLogin;
+
+        // cek apakah token sudah expired atau belum
+        await new Promise((resolve, reject) => {
+            jwt.verify(user.token, jwtSecretKey, async (err, decoded) => {
+                if (!err) {
+                    statusLogin = true;
+                }
+                resolve();
+            });
+        });
+
+        // jika token masih berlaku tidak usah update token
+        if (statusLogin) {
+            return {
+                data: { statusLogin },
+                message: "You are logged."
+            };
+        }
+
+        const generateToken = jwt.sign({ email: user.email }, jwtSecretKey, { expiresIn: '6h' });
 
         const updateToken = await prismaClient.user.update({
             data: {
-                token: verificationToken
+                token: generateToken
             },
             where: {
                 email: loginRequest.email
@@ -139,7 +161,7 @@ const login = async (request, response) => {
             }
         });
 
-        return updateToken;
+        return { data: { token: updateToken.token }, message: "Log in Successful" };
     };
 
     throw new ResponseError(401, "Email has not been verified")
@@ -174,7 +196,8 @@ const forgotPassword = async (request, response) => {
         }
     });
 
-    const verificationLink = `${APP_URL}:${PORT}/api/user/forgot-password/verify/${updateToken.id}/${verificationToken}`;
+    // const verificationLink = `${APP_URL}:${PORT}/api/user/forgot-password/verify/${updateToken.id}/${verificationToken}`;
+    const verificationLink = `${FORGOT_PAGE_URL}?email=${updateToken.email}`
     const mailOptions = {
         from: process.env.MAIL_USERNAME,
         to: updateToken.email,
@@ -218,11 +241,75 @@ const verifyForgot = async (request, response) => {
     return 'Email verification successful.';
 }
 
+const currentLogin = async (request, response) => {
+    // ngambil token
+    const user = await prismaClient.user.findFirst({
+        where: {
+            token: request.token
+        },
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            token: true
+        }
+    });
+
+    //validasi token ada atau tidak 
+    if (!user) {
+        throw new ResponseError(401, "Your token is not available")
+    }
+    //validasi token apakah sudah expired atau belum
+    await new Promise((resolve, reject) => {
+        jwt.verify(user.token, jwtSecretKey, async (err, decoded) => {
+            if (err) {
+                return reject(new ResponseError(401, "Invalid or expired verification token, Please Login."));
+            }
+
+            resolve()
+        });
+    });
+
+    //kalo sudah login kasih user yang lagi login 
+    return user
+
+}
+
+const logout = async (request, response) => {
+    //validasi user dari request token 
+    const user = await prismaClient.user.findFirst({
+        where: {
+            token: request.token,
+        },
+        select: {
+            token: true
+        }
+    })
+    //validasi token
+    if (!user) {
+        throw new ResponseError(404, "User not found.")
+    }
+    // logout update token logout delete token
+    return prismaClient.user.update({
+        where: {
+            id: request.id,
+            token: request.token
+        },
+        data: {
+            token: null
+        },
+        select: {
+            token: true
+        }
+    });
+}
 
 export default {
     register,
     verify,
     login,
     forgotPassword,
-    verifyForgot
+    verifyForgot,
+    currentLogin,
+    logout
 }
