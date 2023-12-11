@@ -18,6 +18,8 @@ publicRouter.get('/api/user/forgot-password/verify/:id/:token', userController.v
 publicRouter.get('/api/user/current/:token', userController.currentLogin)
 publicRouter.delete('/api/user/logout/:id/:token', userController.logout)
 
+publicRouter.patch('/api/user/update-password/:id', userController.updatePassword)
+
 export {
     publicRouter
 }

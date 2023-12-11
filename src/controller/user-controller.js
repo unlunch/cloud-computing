@@ -77,6 +77,17 @@ const logout = async (req, res, next) => {
     }
 }
 
+const updatePassword = async (req, res, next) => {
+    try {
+        await userService.updatePassword(req);
+        res.status(200).json({
+            message: "successfully changed the password"
+        })
+    } catch (e) {
+        next(e)
+    }
+}
+
 
 export default {
     register,
@@ -85,5 +96,6 @@ export default {
     forgot,
     verifyForgot,
     currentLogin,
-    logout
+    logout,
+    updatePassword
 }
