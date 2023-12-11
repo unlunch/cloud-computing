@@ -24,8 +24,16 @@ const forgotUserValidation = Joi.object({
     email: Joi.string().email().max(100).required()
 });
 
+const updatePasswordValidation = Joi.object({
+    password: Joi.string().max(100).required(),
+    password_confirmation: Joi.any().valid(Joi.ref('password'))
+        .required()
+        .options({ messages: { 'any.only': '{{#label}} does not match' } })
+});
+
 export {
     registerUserValidation,
     loginUserValidation,
-    forgotUserValidation
+    forgotUserValidation,
+    updatePasswordValidation
 }

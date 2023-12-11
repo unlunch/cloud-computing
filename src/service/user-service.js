@@ -1,5 +1,5 @@
 import { prismaClient } from "../application/database.js";
-import { forgotUserValidation, loginUserValidation, registerUserValidation } from "../validation/user-validation.js";
+import { forgotUserValidation, loginUserValidation, registerUserValidation, updatePasswordValidation } from "../validation/user-validation.js";
 import { validate } from "../validation/validation.js";
 import { ResponseError } from "../error/response-error.js";
 import bcrypt from "bcrypt";
@@ -304,6 +304,37 @@ const logout = async (request, response) => {
     });
 }
 
+const updatePassword = async (request, response) => {
+    const updatePassword = validate(updatePasswordValidation, request.body);
+
+    const user = await prismaClient.user.findFirst({
+        where: {
+            id: request.params.id,
+        },
+        select: {
+            id: true
+        }
+    });
+
+    if (!user) {
+        throw new ResponseError(404, "User not found.")
+    }
+
+    updatePassword.password = await bcrypt.hash(updatePassword.password, 10);
+
+    return prismaClient.user.update({
+        where: {
+            id: request.params.id
+        },
+        data: {
+            password: updatePassword.password
+        },
+        select: {
+            id: true
+        }
+    });
+}
+
 export default {
     register,
     verify,
@@ -311,5 +342,6 @@ export default {
     forgotPassword,
     verifyForgot,
     currentLogin,
-    logout
+    logout,
+    updatePassword
 }

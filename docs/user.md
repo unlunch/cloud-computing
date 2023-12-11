@@ -107,6 +107,10 @@ Response Body if JWT token Already :
 }
 ```
 
+### ========================================
+
+# LUAR PAGE
+
 ## Forgot User API
 
 <!-- lagi dipikirkan  -->
@@ -145,7 +149,7 @@ Response Body Error :
 
 ## Forgot User Verify API
 
-<!-- lagi dipikirkan  -->
+### Gak jadi
 
 Endpoint : GET /api/user/forgot-password/verify/:id/:token
 
@@ -164,6 +168,8 @@ Response Body Error :
     "errors": "Invalid verification token."
 }
 ```
+
+### ========================================
 
 ## Current User API
 
@@ -189,6 +195,8 @@ Response Error :
     "errors": "Invalid or expired verification token, Please Login."
 }
 ```
+
+### =======================================
 
 ## Update Password User API
 
@@ -218,6 +226,8 @@ Response Body Error :
 }
 ```
 
+### ========================================
+
 ## Logout USER API
 
 Endpoint : POST /api/user/logout/:token
@@ -239,5 +249,38 @@ Response Body if Token not ready :
 ```json
 {
     "errors": "User not found."
+}
+```
+
+## Update Password USER API
+
+Endpoint : POST /api/user/logout/:id
+
+Headers :
+
+-   Authorization : token
+
+Request Body :
+
+```json
+{
+    "password": "rahasia",
+    "password_confirmation": "rahasia"
+}
+```
+
+Response Body Success :
+
+```json
+{
+    "message": "successfully changed the password"
+}
+```
+
+Response Body Error if password_confirmed not :
+
+```json
+{
+    "errors": "\"password_confirmation\" does not match"
 }
 ```
